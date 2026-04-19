@@ -6,6 +6,11 @@ CloudFront를 통해 HTTPS로 접속하는 EC2 기반 code-server(VSCode)를 배
 
 ![Architecture](docs/architecture.png)
 
+1. **Developer Access** — 개발자가 브라우저에서 CloudFront URL로 접속합니다. CloudFront가 TLS를 종료하고 HTTPS 엔드포인트를 제공합니다.
+2. **Origin Request** — CloudFront가 EC2의 포트 8888로 HTTP 요청을 전달합니다. Security Group은 CloudFront origin IP(Managed Prefix List)만 허용하여 직접 접근을 차단합니다.
+3. **Stack Deployment** — CloudFormation이 전체 인프라를 오케스트레이션합니다. Lambda Custom Resource, EC2, Security Group, IAM Role, CloudFront Distribution을 순서대로 프로비저닝합니다.
+4. **Subnet Discovery** — Lambda Custom Resource가 지정된 VPC에서 IGW 라우팅이 설정된 Public Subnet을 자동 탐색하여 EC2 배치 위치를 결정합니다.
+
 <details>
 <summary>Mermaid 다이어그램</summary>
 
