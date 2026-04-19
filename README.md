@@ -4,15 +4,45 @@ CloudFront를 통해 HTTPS로 접속하는 EC2 기반 code-server(VSCode)를 배
 
 ## 아키텍처
 
+![Architecture](docs/architecture.png)
+
+<details>
+<summary>Mermaid 다이어그램</summary>
+
+```mermaid
+flowchart LR
+    subgraph Client
+        User["👨‍💻 Developer<br/>(Browser)"]
+    end
+
+    subgraph AWS["AWS Cloud"]
+        CF["☁️ CloudFront<br/>HTTPS termination"]
+
+        subgraph VPC
+            subgraph Public_Subnet["Public Subnet"]
+                SG["🔒 Security Group<br/>TCP 8888<br/>CloudFront IPs only"]
+                EC2["💻 EC2 Instance<br/>code-server :8888<br/>Claude Code / Kiro CLI<br/>Docker / Node.js 20"]
+            end
+        end
+
+        SSM["📡 Systems Manager<br/>Session Manager"]
+        IAM["🔐 IAM Role<br/>SSM + CloudWatch"]
+
+        subgraph Deploy["Deployment (CloudFormation)"]
+            CFN["📋 CloudFormation<br/>Stack Orchestration"]
+            Lambda["⚡ Lambda<br/>Subnet Discovery"]
+        end
+    end
+
+    User -- "HTTPS" --> CF
+    CF -- "HTTP :8888" --> SG --> EC2
+    EC2 -. "assumes role" .-> IAM
+    EC2 -. "managed instance" .-> SSM
+    CFN -. "invokes custom resource" .-> Lambda
+    Lambda -. "discovers public subnet" .-> EC2
 ```
-User Browser (HTTPS)
-  → CloudFront (TLS termination)
-    → EC2:8888 (Public Subnet, SG: CloudFront IP만 허용)
-        - code-server v4.110.0
-        - Claude Code CLI + Extension
-        - Kiro CLI
-        - Docker, Node.js 20, Python3, AWS CLI v2
-```
+
+</details>
 
 ## 사전 조건
 
